@@ -29,8 +29,35 @@ Cloth :: struct {
 	links: [dynamic]^Link,
 }
 
-make_cloth :: proc(cloth_size: [2]i32, cloth_spacing: i32, cloth_start_position: [2]i32) -> Cloth {
-	return {}
+make_cloth :: proc(cloth_size: [2]i32, cloth_spacing: i32, cloth_start_position: [2]i32) -> (cloth: Cloth) {
+	start_x, start_y := expand_values(cloth_start_position)
+
+	for y := i32(0); y <= cloth_size.y; y += 1 {
+		for x := i32(0); x <= cloth_size.x; x += 1 {
+			point := new(Point)
+			point.init_pos = { f32(start_x + x * cloth_spacing), f32(start_y + y * cloth_spacing) }
+			point.pos = point.init_pos
+			point.prev_pos = point.pos
+			point.is_pinned = y == 0
+			append(&cloth.points, point)
+
+			if x != 0 {
+				link := new(Link)
+				link.p0 = cloth.points[len(cloth.points) - 2]
+				link.p1 = cloth.points[len(cloth.points) - 1]
+				append(&cloth.links, link)
+			}
+
+			if y != 0 {
+				link := new(Link)
+				link.p0 = cloth.points[(y - 1) * (cloth_size.x + 1) + x]
+				link.p1 = cloth.points[y * (cloth_size.x + 1) + x]
+				append(&cloth.links, link)
+			}
+		}
+	}
+
+	return
 }
 
 destroy_cloth :: proc(cloth: Cloth) {
